@@ -5,6 +5,7 @@ import os
 import time
 from tqdm import tqdm
 from xhs_tool import get_photo_or_video_url, get_one_note_info
+from multiprocessing import  Process
 
 # url = 'https://www.xiaohongshu.com/explore/6319ef23000000001103e270'
 dirname, filename = os.path.split(os.path.abspath(__file__))
@@ -116,15 +117,21 @@ def xhs_images_downloader_api(img_list, note):
     path = f"{main_path}photo/{nickname}_{title}/"
     if not os.path.exists(path):
         os.makedirs(path)
-
+    process_list = []
     for img in img_list:
         # print(img[0], img[1]['info_list'][1]['url'])
         image_url = img[1]['info_list'][1]['url']
         image_path = path + title + f"_{img[0]}.webp"
         if not os.path.exists(image_path):
-            photo_downloader(image_url, image_path)
+            p = Process(target=photo_downloader, args=(image_url, image_path))
+            p.start()
+            process_list.append(p)
+            # photo_downloader(image_url, image_path)
         else:
             print(f'图片【{nickname}_{title}】已存在')
+    for p in process_list:
+        # p.close()
+        p.join()
 
 
 def xhs_bulk_download():
