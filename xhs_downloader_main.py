@@ -240,7 +240,7 @@ def xhs_videos_downloader_api(video_url, note):
     if not os.path.exists(path):
         os.makedirs(path)
     video_path = f'{path}{nickname}_{title}.mp4'
-    if not os.path.exists(path):
+    if not os.path.exists(video_path):
         print(f"【视频开始下载】:{nickname}_{title}")
         video_downloader(video_url, video_path)
     else:
