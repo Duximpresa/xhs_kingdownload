@@ -30,8 +30,9 @@ def convert_images_JPG(photo_file):
         photo_name = os.path.splitext(photo_file)[0]
         photo_short_name = photo_name.split('\\')[-1]
         photo_file_name = f'{photo_name}.jpg'
+        print(photo_file_name)
         if not os.path.isfile(photo_file_name):
-            im_rgb.save(f'{photo_file_name}.jpg', quality=95)
+            im_rgb.save(f'{photo_file_name}', quality=95)
             print(f'【{photo_short_name}】转换成功')
         else:
             print(f'{photo_short_name} 【已存在】')
@@ -55,7 +56,7 @@ def convert_images_in_folder(path, suffix):
 
 
 def main():
-    path = r'C:\Users\Administrator\Pictures\图文\韩式穿搭'
+    path = r'E:\DuximpresaProject\Github\xhs_kingdownload\downloads\photo\画南宁_南宁清川地铁站'
     suffix = 'webp'
     convert_images_in_folder(path, suffix)
 
