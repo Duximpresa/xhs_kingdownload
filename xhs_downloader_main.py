@@ -5,7 +5,7 @@ import os
 import time
 from tqdm import tqdm
 from xhs_tool import get_photo_or_video_url, get_one_note_info
-from multiprocessing import  Process
+from multiprocessing import Process
 
 # url = 'https://www.xiaohongshu.com/explore/6319ef23000000001103e270'
 dirname, filename = os.path.split(os.path.abspath(__file__))

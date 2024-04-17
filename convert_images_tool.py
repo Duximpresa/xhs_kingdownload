@@ -55,7 +55,7 @@ def convert_images_in_folder(path, suffix):
 
 
 def main():
-    path = r'H:\DuximpresaProject\Pycharm\test2\小红书\downloads\photo'
+    path = r'C:\Users\Administrator\Pictures\图文\韩式穿搭'
     suffix = 'webp'
     convert_images_in_folder(path, suffix)
 
