@@ -12,6 +12,7 @@ import datetime
 import os
 from multiprocessing import Process
 
+
 class DyApiDownloader:
     def __init__(self):
         dirname, filename = os.path.split(os.path.abspath(__file__))
@@ -46,16 +47,20 @@ class DyApiDownloader:
         }
         self.filename_length = 30
         self.douyin_download_dir_path = f'{main_path}/downloads/douyin/'
+        self.douyin_download_user_dir_path = f'{main_path}/downloads/douyin/user/'
         self.douyin_download_video_dir_path = f'{main_path}/downloads/douyin/video/'
         self.douyin_download_image_dir_path = f'{main_path}/downloads/douyin/image/'
         if not os.path.exists(self.douyin_download_dir_path):
             os.makedirs(self.douyin_download_dir_path)
+        if not os.path.exists(self.douyin_download_user_dir_path):
+            os.makedirs(self.douyin_download_user_dir_path)
         if not os.path.exists(self.douyin_download_video_dir_path):
             os.makedirs(self.douyin_download_video_dir_path)
         if not os.path.exists(self.douyin_download_image_dir_path):
             os.makedirs(self.douyin_download_image_dir_path)
 
         self.douyin_url_file = f'{main_path}/抖音下载链接.txt'
+        self.post_url_file = '抖音用户所有视频.txt'
 
     def get_url(self, text: str):
         try:
@@ -222,6 +227,7 @@ class DyApiDownloader:
             raise ValueError(f"获取抖音视频数据出错了: {e}")
 
     """__________________________________________⬇️工具⬇️______________________________________"""
+
     # 时间戳转日期
     async def timestamp_to_date(self, timestamp):
         # 将时间戳转换为datetime对象
@@ -229,6 +235,7 @@ class DyApiDownloader:
         # 格式化日期
         date = date_time.strftime('%Y-%m-%d_%H-%M-%S')
         return date
+
     async def create_folder(self, path):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -256,6 +263,7 @@ class DyApiDownloader:
                 bar.update(size)
 
     """__________________________________________⬇️API 本地获取视频信息⬇️______________________________________"""
+
     async def get_douyin_video_download_data_api(self, url):
         # url = await self.convert_share_urls(text)
         douyin_video_url = url
@@ -284,6 +292,7 @@ class DyApiDownloader:
             for data in video_res.iter_content(chunk_size=512):
                 size = file.write(data)
                 bar.update(size)
+
     async def douyin_url_to_video(self, text):
         # downloads_path = self.douyin_download_video_dir_path
         length = self.filename_length
@@ -299,7 +308,7 @@ class DyApiDownloader:
             create_time = await self.timestamp_to_date(create_time)
             nickname = video_data["aweme_list"][0]["author"]["nickname"]
             desc = video_data["aweme_list"][0]["desc"]
-            if len(desc) >=length:
+            if len(desc) >= length:
                 desc = await self.validateTitle(desc[:length])
             video_name = f'【{nickname}】_{create_time}_{desc}'
             video_path = f'{downloads_path}{video_name}.mp4'
@@ -322,7 +331,7 @@ class DyApiDownloader:
             create_time = await self.timestamp_to_date(create_time)
             nickname = video_data["aweme_list"][0]["author"]["nickname"]
             desc = video_data["aweme_list"][0]["desc"]
-            if len(desc) >=length:
+            if len(desc) >= length:
                 desc = await self.validateTitle(desc[:length])
             image_name = f'【{nickname}】_{create_time}_{desc}'
             # print(image_name)
@@ -342,6 +351,70 @@ class DyApiDownloader:
 
         else:
             print('url的类型为未知，无法处理')
+    async def douyin_url_to_video_user(self, text):
+        # downloads_path = self.douyin_download_video_dir_path
+        length = self.filename_length
+        original_url = await self.convert_share_urls(text)
+        video_data = await self.get_douyin_video_data_api(original_url)
+        url_type_code = video_data["aweme_list"][0]['aweme_type']
+        url_type = self.url_type_code_dict.get(url_type_code)
+        if url_type == 'video':
+            print('url的类型为【视频】')
+            print("正在处理抖音视频数据...")
+            nickname = video_data["aweme_list"][0]["author"]["nickname"]
+            downloads_path = f'{self.douyin_download_user_dir_path}{nickname}/'
+            create_time = video_data["aweme_list"][0]["create_time"]
+            create_time = await self.timestamp_to_date(create_time)
+            desc = video_data["aweme_list"][0]["desc"]
+            if len(desc) >= length:
+                desc = await self.validateTitle(desc[:length])
+            video_name = f'【{nickname}】_{create_time}_{desc}'
+            video_path = f'{downloads_path}{video_name}.mp4'.replace("\n", '')
+            print(video_path)
+            if not os.path.exists(downloads_path):
+                os.makedirs(downloads_path)
+            if not os.path.exists(video_path):
+                # print(video_path)
+                video_res = await self.get_douyin_video_download_data_api(original_url)
+                await self.video_wb_downloader(video_res, video_path)
+            else:
+                print(f'{video_name}【已存在】')
+        if url_type == 'image':
+            print('url的类型为【图文】')
+            print("正在处理抖音图片数据...")
+            nickname = video_data["aweme_list"][0]["author"]["nickname"]
+            downloads_path = f'{self.douyin_download_user_dir_path}{nickname}/'
+
+            no_watermark_image_list = []
+            watermark_image_list = []
+
+            data = video_data["aweme_list"][0]
+            for i in data['images']:
+                no_watermark_image_list.append(i['url_list'][0])
+                watermark_image_list.append(i['download_url_list'][0])
+            create_time = video_data["aweme_list"][0]["create_time"]
+            create_time = await self.timestamp_to_date(create_time)
+            desc = video_data["aweme_list"][0]["desc"]
+            if len(desc) >= length:
+                desc = await self.validateTitle(desc[:length])
+            image_name = f'【{nickname}】_{create_time}_{desc}'
+            image_path = f'{downloads_path}{image_name}'.replace("\n", '')
+            print(image_path)
+            if not os.path.exists(image_path):
+                os.makedirs(image_path)
+            # print(image_path)
+            image_url_list = enumerate(no_watermark_image_list)
+            for image in image_url_list:
+                index = image[0]
+                url = image[1]
+                path = f'{image_path}/{desc}_{index}.webp'.replace("\n", '')
+                if not os.path.exists(path):
+                    self.photo_downloader(url, path)
+                else:
+                    print(f'{path}【已存在】')
+
+        else:
+            print('url的类型为未知，无法处理')
 
     async def douyin_download_from_urlfile(self):
         process_list = []
@@ -349,10 +422,26 @@ class DyApiDownloader:
             url_list = f.readlines()
         for text in url_list:
             await self.douyin_url_to_video(text)
+
+    async def douyin_download_user_post(self):
+        process_list = []
+        with open(self.post_url_file, 'r', encoding='utf-8') as f:
+            url_list = f.readlines()
+        for text in url_list:
+            test = text.replace('\n', '')
+            url = f'https://www.douyin.com/video/{text.split("/")[-1]}'
+            print(url)
+            await self.douyin_url_to_video_user(url)
+
+
 async def main():
     text = "https://v.douyin.com/iYXcDrn6/"
     api = DyApiDownloader()
     await api.douyin_download_from_urlfile()
+async def user_main():
+    api = DyApiDownloader()
+    await api.douyin_download_user_post()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    # asyncio.run(main())
+    asyncio.run(user_main())

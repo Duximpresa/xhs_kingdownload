@@ -188,6 +188,7 @@ def get_photo_or_video_url(note):
         url_list.append(video_url)
     return url_list
 
+
 def get_one_note_info(url):
     headers = get_headers()
     params = get_params()
@@ -199,13 +200,16 @@ def get_one_note_info(url):
     headers['x-s'], headers['x-t'] = ret['X-s'], str(ret['X-t'])
     response = requests.post(feed_url, headers=headers, cookies=cookies, data=data)
     res = response.json()
+    print(res)
+    print(res['data']['items'][0])
     try:
-     data = res['data']['items'][0]
+        data = res['data']['items'][0]
     except:
-     print(f'笔记 {note_id} 不允许查看')
-     return
+        print(f'笔记 {note_id} 不允许查看')
+        # return
     note = handle_note_info(data)
     return note
+
 
 if __name__ == '__main__':
     url = 'https://www.xiaohongshu.com/explore/65f0f37f0000000014005fd4'
